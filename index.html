@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+        />
+        <title>Music Player</title>
+
+        <!-- Favicon -->
+        <link
+            rel="shortcut icon"
+            href="./assets/img/vinyl-record.png"
+            type="image/x-icon"
+        />
+
+        <!-- Stylesheets -->
+        <link
+            rel="stylesheet"
+            href="./assets/css/reset.css"
+        />
+        <link
+            rel="stylesheet"
+            href="./assets/css/style.css"
+        />
+
+        <!-- Font Awesome -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+            integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+            crossorigin="anonymous"
+        />
+    </head>
+    <body>
+        <div class="player">
+            <!-- Dashboard -->
+            <div class="dashboard">
+                <!-- Search Button -->
+                <div class="search-btn">
+                    <i class="fas fa-search"></i>
+                </div>
+                <!-- Header -->
+                <header>
+                    <h4>Now Playing:</h4>
+                    <h2>String 57th</h2>
+                </header>
+
+                <!-- CD -->
+                <div class="cd">
+                    <figure
+                        class="cd-thumb"
+                        style="
+                            background-image: url(https://cdn-images.dzcdn.net/images/cover/0cda7a8c13b4f1fcc0eb7d9edd0dbc34/0x1900-000000-80-0-0.jpg);
+                        "
+                    ></figure>
+                </div>
+
+                <!-- Controls -->
+                <div class="control">
+                    <div class="btn btn-repeat">
+                        <i class="fas fa-redo"></i>
+                    </div>
+                    <div class="btn btn-prev">
+                        <i class="fas fa-step-backward"></i>
+                    </div>
+                    <div class="btn btn-toggle-play">
+                        <i class="fas fa-play play-icon"></i>
+                    </div>
+                    <div class="btn btn-next">
+                        <i class="fas fa-step-forward"></i>
+                    </div>
+                    <div class="btn btn-random">
+                        <i class="fas fa-random"></i>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <input
+                    id="progress"
+                    class="progress"
+                    type="range"
+                    value="0"
+                    step="1"
+                    min="0"
+                    max="100"
+                />
+
+                <!-- Audio Player -->
+                <audio
+                    id="audio"
+                    src=""
+                ></audio>
+            </div>
+
+            <!-- Playlist -->
+            <div class="playlist">
+                <!-- Song Items -->
+            </div>
+        </div>
+
+        <!-- JavaScript -->
+        <script src="./main.js"></script>
+    </body>
+</html>
