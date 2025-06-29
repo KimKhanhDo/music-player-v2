@@ -37,9 +37,16 @@
         <div class="player">
             <!-- Dashboard -->
             <div class="dashboard">
-                <!-- Search Button -->
-                <div class="search-btn">
-                    <i class="fas fa-search"></i>
+                <!-- Search Button & Input -->
+                <div class="search-container">
+                    <div class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <input
+                        type="text"
+                        class="search-input"
+                        placeholder="Search songs..."
+                    />
                 </div>
                 <!-- Header -->
                 <header>
@@ -77,15 +84,27 @@
                 </div>
 
                 <!-- Progress Bar -->
-                <input
-                    id="progress"
-                    class="progress"
-                    type="range"
-                    value="0"
-                    step="1"
-                    min="0"
-                    max="100"
-                />
+                <div class="progress-container">
+                    <span
+                        id="currentTime"
+                        class="currentTime"
+                        >0:00</span
+                    >
+                    <input
+                        id="progress"
+                        class="progress"
+                        type="range"
+                        value="0"
+                        step="1"
+                        min="0"
+                        max="100"
+                    />
+                    <span
+                        id="totalTime"
+                        class="totalTime"
+                        >0:00</span
+                    >
+                </div>
 
                 <!-- Audio Player -->
                 <audio
