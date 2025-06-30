@@ -2,8 +2,7 @@
  * 1. Set constant for local storage: theme, volume, isMuted
  * 2. Display time for each song dynamically ✅
  * 3. 3 dots -> context menu -> delete, favorite, theme switch (dark/light)
- * 4. Adjust volume
- * 5.logic when press ESC to exist input
+ * 5.logic when press ESC to exist input ✅
  *
  */
 
@@ -49,70 +48,70 @@ const musicPlayer = {
             singer: 'Chị Đẹp',
             path: './assets/music/cau-duyen.mp3',
             image: './assets/img/cau-duyen.webp',
-            duration: '3:37',
+            duration: 0,
         },
         {
             name: 'Cầu Vồng Lấp Lánh',
             singer: 'Dương Hoàng Yến',
             path: './assets/music/cau-vong-lap-lanh.mp3',
             image: './assets/img/cau-vong-lap-lanh.jpeg',
-            duration: '2:12',
+            duration: 0,
         },
         {
             name: 'Có Chàng Trai Viết Lên Cây',
             singer: 'Phan Mạnh Quỳnh',
             path: './assets/music/co-chang-trai-viet-len-cay.mp3',
             image: './assets/img/co-chang-trai-viet-len-cay.jpeg',
-            duration: '4:21',
+            duration: 0,
         },
         {
             name: 'Đậm Đà',
             singer: 'Tóc Tiên',
             path: './assets/music/dam-da.mp3',
             image: './assets/img/dam-da.jpeg',
-            duration: '3:04',
+            duration: 0,
         },
         {
             name: 'Đưa Em Về Nhà',
             singer: 'Chillies',
             path: './assets/music/dua-em-ve-nha.mp3',
             image: './assets/img/dua-em-ve-nha.jpeg',
-            duration: '4:00',
+            duration: 0,
         },
         {
             name: 'May Mắn',
             singer: 'Bùi Lan Hương x Ái Phương',
             path: './assets/music/may-man.mp3',
             image: './assets/img/may-man.jpeg',
-            duration: '4:28',
+            duration: 0,
         },
         {
             name: 'Mê Muội',
             singer: 'Bùi Lan Hương',
             path: './assets/music/me-muoi.mp3',
             image: './assets/img/me-muoi.jpeg',
-            duration: '3:39',
+            duration: 0,
         },
         {
             name: 'Miền Mộng Mị',
             singer: 'AMEE x Tlinh',
             path: './assets/music/mien-mong-mi.mp3',
             image: './assets/img/mien-mong-mi.jpeg',
-            duration: '3:00',
+            duration: 0,
         },
         {
             name: 'Từng Là',
             singer: 'Vũ Cát Tường',
             path: './assets/music/tung-la.mp3',
             image: './assets/img/tung-la.jpeg',
-            duration: '4:12',
+            duration: 0,
         },
         {
             name: 'Vị Nhà',
             singer: 'Đen Vâu',
             path: './assets/music/vi-nha.mp3',
             image: './assets/img/vi-nha.jpeg',
-            duration: '4:58',
+            duration: 0,
         },
     ],
 
@@ -127,15 +126,19 @@ const musicPlayer = {
     start() {
         this._loadPlayerState();
 
+        this._loadSongDurations().then(() => {
+            this._renderPlaylist(this.songs);
+        });
+
         // Load the 1st song on UI when musicPlayer start
         this._loadCurrentSong();
 
-        this._renderPlaylist(this.songs);
+        this._setupSearchHandlers();
 
-        this._handlePlayerEvents();
+        this._setupMusicPlayerHandlers();
     },
 
-    // === Helper Functions ===
+    // === LOAD STATE FROM LOCAL STORAGE ===
     _loadPlayerState() {
         this.isLoopMode =
             localStorage.getItem(this.STORAGE_SETTINGS.LOOP_MODE) === 'true';
@@ -149,7 +152,87 @@ const musicPlayer = {
             ) ?? {};
     },
 
-    _handlePlayerEvents() {
+    // === SEARCH HANDLERS ===
+    _setupSearchHandlers() {
+        this.searchBtn.onclick = this._handleSearchButtonClick.bind(this);
+
+        this.searchInput.onclick = (e) => {
+            e.stopPropagation(); // ⛔️ Ngăn sự kiện click lan tới dashboard
+        };
+
+        this.searchInput.oninput = this._handleSearchInput.bind(this);
+
+        this.searchInput.onkeydown = this._handleSearchEscapeKey.bind(this);
+
+        document.onclick = this._handleDocumentClick.bind(this);
+    },
+
+    _handleSearchButtonClick(e) {
+        e.stopPropagation();
+        this.searchInput.classList.add('active');
+        this.searchBtn.classList.add('hidden');
+        this.searchInput.focus();
+    },
+
+    _handleSearchEscapeKey(e) {
+        if (e.key === 'Escape') {
+            this._resetSearchInput();
+        }
+    },
+
+    _handleSearchInput(e) {
+        // Use debounce to avoid triggering search too often while typing
+        let debounceTimer;
+
+        this.searchInput.oninput = (e) => {
+            const keyword = this.searchInput.value.toLowerCase();
+
+            clearTimeout(debounceTimer); // Clear the previous timeout if the user is still typing
+
+            // Set a new timeout to delay the search execution
+            debounceTimer = setTimeout(() => {
+                const searchList = this.songs.filter((song) => {
+                    const songName = this._removeVietnameseTones(
+                        song.name.toLowerCase()
+                    );
+
+                    const singerName = this._removeVietnameseTones(
+                        song.singer.toLowerCase()
+                    );
+
+                    return (
+                        songName.includes(keyword) ||
+                        singerName.includes(keyword)
+                    );
+                });
+                this._renderPlaylist(searchList);
+            }, 300); // The search only runs after the user stops typing 300ms
+        };
+    },
+
+    _handleDocumentClick(e) {
+        const clickedSearchInput = this.searchInput.contains(e.target);
+        const clickedSearchBtn = this.searchBtn.contains(e.target);
+
+        if (!clickedSearchInput && !clickedSearchBtn) {
+            this._resetSearchInput();
+        }
+    },
+
+    _resetSearchInput() {
+        this.searchInput.classList.remove('active');
+        this.searchBtn.classList.remove('hidden');
+        this.searchInput.value = '';
+        this._renderPlaylist(this.songs);
+    },
+
+    // Remove Vietnamese diacritical marks (accents) from characters
+    _removeVietnameseTones(str) {
+        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    },
+
+    // === MUSIC PLAYER HANDLERS ===
+    _setupMusicPlayerHandlers() {
         const cdRotation = this._setupCdRotation();
 
         // Handle CD zoom in/ out
@@ -213,50 +296,25 @@ const musicPlayer = {
             this,
             this.NEXT_SONG
         );
-
-        this.searchBtn.onclick = (e) => {
-            e.stopPropagation();
-            this.searchInput.classList.add('active');
-            this.searchBtn.classList.add('hidden');
-            this.searchInput.focus();
-        };
-
-        this.searchInput.onclick = (e) => {
-            e.stopPropagation(); // ⛔️ Ngăn sự kiện click lan tới dashboard
-        };
-
-        this.searchInput.oninput = (e) => {
-            const keyword = this.searchInput.value.toLowerCase();
-
-            const searchList = this.songs.filter(
-                (song) =>
-                    song.name.toLowerCase().includes(keyword) ||
-                    song.singer.toLowerCase().includes(keyword)
-            );
-
-            this._renderPlaylist(searchList);
-        };
-
-        this.dashboard.onclick = (e) => {
-            this.searchInput.classList.remove('active');
-            this.searchBtn.classList.remove('hidden');
-        };
     },
 
     _onSongClick(e) {
+        const optionElement = e.target.closest('.option');
+        if (optionElement) return;
+
         const songElement = e.target.closest('.song');
-        if (!songElement) return;
+        if (songElement) {
+            const clickedIndex = +songElement.dataset.index;
 
-        const clickedIndex = +songElement.dataset.index;
-
-        // Clicked on playing song -> toggle play/pause
-        if (this.currentSongIndex === clickedIndex) {
-            this._togglePlayback();
-        } else {
-            // Clicked on another song -> change new song -> apply song changed
-            this.currentSongIndex = clickedIndex;
-            this.isPlaying = true;
-            this._applySongChange();
+            // Clicked on playing song -> toggle play/pause
+            if (this.currentSongIndex === clickedIndex) {
+                this._togglePlayback();
+            } else {
+                // Clicked on another song -> change new song -> apply song changed
+                this.currentSongIndex = clickedIndex;
+                this.isPlaying = true;
+                this._applySongChange();
+            }
         }
     },
 
@@ -407,6 +465,7 @@ const musicPlayer = {
         this.titleHeading.textContent = currentSong.name;
         this.cdThumb.style.backgroundImage = `url('${currentSong.image}')`;
         this.audioPlayer.src = currentSong.path;
+        this._setDashboardBackground(currentSong.image);
 
         this._setLoopMode();
         this._setRandomMode();
@@ -425,6 +484,27 @@ const musicPlayer = {
 
     _getCurrentSong() {
         return this.songs[this.currentSongIndex];
+    },
+
+    _loadSongDurations() {
+        const songDurations = this.songs.map((song, index) => {
+            return new Promise((resolve) => {
+                const tempAudio = new Audio();
+                tempAudio.src = song.path;
+
+                tempAudio.addEventListener('loadedmetadata', () => {
+                    this.songs[index].duration = tempAudio.duration;
+                    resolve();
+                });
+
+                tempAudio.addEventListener('error', () => {
+                    this.songs[index].duration = 0;
+                    resolve();
+                });
+            });
+        });
+
+        return Promise.all(songDurations);
     },
 
     _renderPlaylist(songList) {
@@ -450,7 +530,9 @@ const musicPlayer = {
                             <span class="author-name">${this._escapeHTML(
                                 song.singer
                             )}</span>
-                            <span class="duration">${song.duration}</span>
+                            <span class="duration">${this._formatTime(
+                                song.duration
+                            )}</span>
                             <span class="plays">${this._getPlayCount(
                                 index
                             )} plays</span>
@@ -467,6 +549,11 @@ const musicPlayer = {
         this.playList.innerHTML = html;
 
         this._scrollToActiveSong();
+    },
+
+    _setDashboardBackground(imageUrl) {
+        const dashboardBg = $('.background-blur');
+        dashboardBg.style.backgroundImage = `url('${imageUrl}')`;
     },
 
     _getPlayCount(index) {
