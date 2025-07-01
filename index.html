@@ -39,6 +39,24 @@
             <div class="dashboard">
                 <div class="background-blur"></div>
 
+                <!-- Hamburger Menu -->
+                <div class="drawer-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+
+                <!-- Sub Menu -->
+                <div class="sub-menu">
+                    <div class="menu-item theme-toggle">
+                        <i class="fas fa-adjust"></i> Theme Mode
+                    </div>
+                    <div class="menu-item all-songs">
+                        <i class="fas fa-music"></i> All Songs
+                    </div>
+                    <div class="menu-item favorites">
+                        <i class="fas fa-heart"></i> Favorite Songs
+                    </div>
+                </div>
+
                 <!-- Search Button & Input -->
                 <div class="search-container">
                     <div class="search-btn">
@@ -123,6 +141,46 @@
             <!-- Playlist -->
             <div class="playlist">
                 <!-- Song Items -->
+
+                <!-- <div
+                    class="song"
+                    data-index="${index}"
+                >
+                    <div class="thumb"></div>
+                    <div class="body">
+                        <h3 class="title">${this._escapeHTML(song.name)}</h3>
+                        <div class="author">
+                            <span class="author-name"
+                                >${this._escapeHTML( song.singer )}</span
+                            >
+                            <span class="duration"
+                                >${this._formatTime( song.duration )}</span
+                            >
+                            <span class="plays"
+                                >${this._getPlayCount( index )} plays</span
+                            >
+                        </div>
+                    </div>
+                    <div class="option">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                </div>
+
+             
+                <div class="song-menu">
+                    <div class="menu-item">
+                        <i class="fas fa-heart"></i> Favorite
+                    </div>
+                    <div class="menu-item">
+                        <i class="fas fa-trash"></i> Delete from Library
+                    </div>
+                    <div class="menu-item">
+                        <i class="fas fa-step-forward"></i> Play Next
+                    </div>
+                    <div class="menu-item">
+                        <i class="fas fa-plus"></i> Add to a Playlist
+                    </div>
+                </div> -->
             </div>
         </div>
 

@@ -8,6 +8,7 @@
 
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
+let debounceTimer = null;
 
 const musicPlayer = {
     // Constants
@@ -19,6 +20,7 @@ const musicPlayer = {
         LOOP_MODE: 'musicPlayer_loopMode',
         RANDOM_MODE: 'musicPlayer_randomMode',
         PLAY_COUNTS: 'musicPlayer_playCounts',
+        FAVORITE_SONGS: 'musicPlayer_favoriteSongs',
     },
 
     // DOM elements
@@ -40,6 +42,8 @@ const musicPlayer = {
     searchBtn: $('.search-btn'),
     searchInput: $('.search-input'),
     dashboard: $('.dashboard'),
+    drawerMenu: $('.drawer-menu'),
+    subMenu: $('.sub-menu'),
 
     // List of songs
     songs: [
@@ -122,12 +126,16 @@ const musicPlayer = {
     isRandomMode: false,
     hasTrackedCurrentPlay: false,
     songPlayCounts: {},
+    favoriteSongs: [],
 
     start() {
         this._loadPlayerState();
 
+        // Set currentSongList to all songs at startup
+        this.currentSongList = this.songs;
+
         this._loadSongDurations().then(() => {
-            this._renderPlaylist(this.songs);
+            this._renderPlaylist(this.currentSongList);
         });
 
         // Load the 1st song on UI when musicPlayer start
@@ -135,7 +143,59 @@ const musicPlayer = {
 
         this._setupSearchHandlers();
 
+        this._setupDrawerMenu();
+
         this._setupMusicPlayerHandlers();
+
+        this._boundHandleGlobalClick =
+            this._handleGlobalDocumentClick.bind(this);
+        document.addEventListener('click', this._boundHandleGlobalClick);
+    },
+
+    _setupDrawerMenu() {
+        this.drawerMenu.onclick = (e) => {
+            e.stopPropagation();
+            this.subMenu.classList.toggle('active');
+        };
+
+        this.subMenu.onclick = (e) => {
+            e.stopPropagation();
+
+            const clickedThemeOption = e.target.closest('.theme-toggle');
+            const clickedAllSongsOption = e.target.closest('.all-songs');
+            const clickedFavoritesOption = e.target.closest('.favorites');
+
+            if (clickedThemeOption) {
+                document.body.classList.toggle('light-mode');
+                return;
+            }
+
+            if (clickedAllSongsOption) {
+                this.currentSongList = this.songs;
+                this._renderPlaylist(this.currentSongList);
+                this.subMenu.classList.remove('active');
+                return;
+            }
+
+            if (clickedFavoritesOption) {
+                const listOfFavoriteSongs = this.favoriteSongs.map(
+                    (favoriteIndex) => {
+                        return {
+                            ...this.songs[favoriteIndex],
+                            originalIndex: favoriteIndex,
+                        };
+                    }
+                );
+
+                this.currentSongList = listOfFavoriteSongs;
+                this._renderPlaylist(this.currentSongList);
+                this.subMenu.classList.remove('active');
+            }
+        };
+
+        // document.onclick = () => {
+        //     this.subMenu.classList.remove('active');
+        // };
     },
 
     // === LOAD STATE FROM LOCAL STORAGE ===
@@ -150,6 +210,11 @@ const musicPlayer = {
             JSON.parse(
                 localStorage.getItem(this.STORAGE_SETTINGS.PLAY_COUNTS)
             ) ?? {};
+
+        this.favoriteSongs =
+            JSON.parse(
+                localStorage.getItem(this.STORAGE_SETTINGS.FAVORITE_SONGS)
+            ) ?? [];
     },
 
     // === SEARCH HANDLERS ===
@@ -157,21 +222,47 @@ const musicPlayer = {
         this.searchBtn.onclick = this._handleSearchButtonClick.bind(this);
 
         this.searchInput.onclick = (e) => {
-            e.stopPropagation(); // ⛔️ Ngăn sự kiện click lan tới dashboard
+            e.stopPropagation(); // ⛔️ Stop event bubbling to dashboard
         };
 
         this.searchInput.oninput = this._handleSearchInput.bind(this);
-
         this.searchInput.onkeydown = this._handleSearchEscapeKey.bind(this);
 
-        document.onclick = this._handleDocumentClick.bind(this);
+        // document.onclick = this._handleDocumentClick.bind(this);
     },
 
     _handleSearchButtonClick(e) {
         e.stopPropagation();
         this.searchInput.classList.add('active');
         this.searchBtn.classList.add('hidden');
+        this.drawerMenu.style.display = 'none';
         this.searchInput.focus();
+    },
+
+    _handleSearchInput(e) {
+        const keyword = this.searchInput.value.toLowerCase();
+
+        clearTimeout(debounceTimer);
+
+        // Use debounce to avoid triggering search too often while typing
+        // Set a new timeout to delay the search execution
+        debounceTimer = setTimeout(() => {
+            const searchList = this.songs.filter((song) => {
+                const songName = this._removeVietnameseTones(
+                    song.name.toLowerCase().trim()
+                );
+
+                const singerName = this._removeVietnameseTones(
+                    song.singer.toLowerCase().trim()
+                );
+
+                return (
+                    songName.includes(keyword) || singerName.includes(keyword)
+                );
+            });
+
+            this._renderPlaylist(searchList);
+        }, 300); // The search only runs after the user stops typing 300ms
     },
 
     _handleSearchEscapeKey(e) {
@@ -180,55 +271,30 @@ const musicPlayer = {
         }
     },
 
-    _handleSearchInput(e) {
-        // Use debounce to avoid triggering search too often while typing
-        let debounceTimer;
+    // _handleDocumentClick(e) {
+    //     const clickedSearchInput = this.searchInput.contains(e.target);
+    //     const clickedSearchBtn = this.searchBtn.contains(e.target);
 
-        this.searchInput.oninput = (e) => {
-            const keyword = this.searchInput.value.toLowerCase();
-
-            clearTimeout(debounceTimer); // Clear the previous timeout if the user is still typing
-
-            // Set a new timeout to delay the search execution
-            debounceTimer = setTimeout(() => {
-                const searchList = this.songs.filter((song) => {
-                    const songName = this._removeVietnameseTones(
-                        song.name.toLowerCase()
-                    );
-
-                    const singerName = this._removeVietnameseTones(
-                        song.singer.toLowerCase()
-                    );
-
-                    return (
-                        songName.includes(keyword) ||
-                        singerName.includes(keyword)
-                    );
-                });
-                this._renderPlaylist(searchList);
-            }, 300); // The search only runs after the user stops typing 300ms
-        };
-    },
-
-    _handleDocumentClick(e) {
-        const clickedSearchInput = this.searchInput.contains(e.target);
-        const clickedSearchBtn = this.searchBtn.contains(e.target);
-
-        if (!clickedSearchInput && !clickedSearchBtn) {
-            this._resetSearchInput();
-        }
-    },
+    //     if (!clickedSearchInput && !clickedSearchBtn) {
+    //         this._resetSearchInput();
+    //     }
+    // },
 
     _resetSearchInput() {
         this.searchInput.classList.remove('active');
         this.searchBtn.classList.remove('hidden');
         this.searchInput.value = '';
+        this.drawerMenu.style.display = 'block';
         this._renderPlaylist(this.songs);
     },
 
     // Remove Vietnamese diacritical marks (accents) from characters
     _removeVietnameseTones(str) {
-        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return str
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // loại bỏ dấu
+            .replace(/đ/g, 'd') // đ → d
+            .replace(/Đ/g, 'D'); // Đ → D
     },
 
     // === MUSIC PLAYER HANDLERS ===
@@ -299,12 +365,47 @@ const musicPlayer = {
     },
 
     _onSongClick(e) {
-        const optionElement = e.target.closest('.option');
-        if (optionElement) return;
+        const clickedOption = e.target.closest('.option');
+        const clickedSongItem = e.target.closest('.song');
 
-        const songElement = e.target.closest('.song');
-        if (songElement) {
-            const clickedIndex = +songElement.dataset.index;
+        if (clickedOption) {
+            const heartIcon = clickedOption.querySelector('.fa-heart');
+
+            // Toggle 'active' class to visually mark/unmark it as favorite
+            heartIcon.classList.toggle('active');
+
+            const parentSongItem = clickedOption.closest('.song');
+
+            if (parentSongItem) {
+                const songIndex = +parentSongItem.dataset.index;
+
+                // Check if this song is already in the favorite list
+                const isAlreadyFavorited =
+                    this.favoriteSongs.includes(songIndex);
+
+                // If not Add the song to the favorite list
+                if (!isAlreadyFavorited) {
+                    this.favoriteSongs.push(songIndex);
+                } else {
+                    // Remove the song from the favorite list
+                    this.favoriteSongs = this.favoriteSongs.filter(
+                        (favoriteIndex) => favoriteIndex !== songIndex
+                    );
+                }
+
+                localStorage.setItem(
+                    this.STORAGE_SETTINGS.FAVORITE_SONGS,
+                    JSON.stringify(this.favoriteSongs)
+                );
+
+                console.log(this.favoriteSongs);
+            }
+
+            return;
+        }
+
+        if (clickedSongItem) {
+            const clickedIndex = +clickedSongItem.dataset.index;
 
             // Clicked on playing song -> toggle play/pause
             if (this.currentSongIndex === clickedIndex) {
@@ -447,8 +548,10 @@ const musicPlayer = {
         // + this.songs.length -> avoid negative index/ exceed length
         this.currentSongIndex =
             (this.currentSongIndex + this.songs.length) % this.songs.length;
+
         this._loadCurrentSong();
-        this._renderPlaylist(this.songs);
+
+        this._renderPlaylist(this.currentSongList);
     },
 
     // Call play/ pause
@@ -510,39 +613,34 @@ const musicPlayer = {
     _renderPlaylist(songList) {
         const html = songList
             .map((song, index) => {
-                const isActive = index === this.currentSongIndex;
+                const isActive =
+                    (song.originalIndex ?? index) === this.currentSongIndex;
 
                 return `
-               <div class="song  ${
-                   isActive ? 'active' : ''
-               }" data-index=${index}>
-                    <div
-                        class="thumb"
-                        style="
-                            background-image: url(${this._escapeHTML(
-                                song.image
-                            )});
-                        "
-                    ></div>
-                    <div class="body">
-                    <h3 class="title">${this._escapeHTML(song.name)}</h3>
-                       <div class="author">
-                            <span class="author-name">${this._escapeHTML(
-                                song.singer
-                            )}</span>
-                            <span class="duration">${this._formatTime(
-                                song.duration
-                            )}</span>
-                            <span class="plays">${this._getPlayCount(
-                                index
-                            )} plays</span>
-                        </div>
-                    </div>
-                    <div class="option">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </div>
-                </div>
-            `;
+  <div class="song ${isActive ? 'active' : ''}" data-index="${
+                    song.originalIndex ?? index
+                }">
+    <div class="thumb" style="background-image: url('${this._escapeHTML(
+        song.image
+    )}');"></div>
+    <div class="body">
+        <h3 class="title">${this._escapeHTML(song.name)}</h3>
+        <div class="author">
+            <span class="author-name">${this._escapeHTML(song.singer)}</span>
+            <span class="duration">${this._formatTime(song.duration)}</span>
+            <span class="plays">${this._getPlayCount(index)} plays</span>
+        </div>
+    </div>
+    <div class="option">
+        <i class="fas fa-heart ${
+            this.favoriteSongs.includes(song.originalIndex ?? index)
+                ? 'active'
+                : ''
+        }"></i>
+    </div>
+  </div>
+
+`;
             })
             .join('');
 
@@ -591,6 +689,23 @@ const musicPlayer = {
         const div = document.createElement('div');
         div.textContent = html;
         return div.innerHTML;
+    },
+
+    _handleGlobalDocumentClick(e) {
+        const clickedSearchInput = this.searchInput.contains(e.target);
+        const clickedSearchBtn = this.searchBtn.contains(e.target);
+        const clickedSubMenu = this.subMenu.contains(e.target);
+        const clickedDrawerMenu = this.drawerMenu.contains(e.target);
+
+        // ✅ Reset Search
+        if (!clickedSearchInput && !clickedSearchBtn) {
+            this._resetSearchInput();
+        }
+
+        // ✅ Hide menu
+        if (!clickedSubMenu && !clickedDrawerMenu) {
+            this.subMenu.classList.remove('active');
+        }
     },
 };
 
