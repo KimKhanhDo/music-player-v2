@@ -547,6 +547,18 @@ const musicPlayer = {
             this.currentSongList.length;
 
         this._loadCurrentSong();
+        this._updateActiveSong();
+    },
+
+    _updateActiveSong() {
+        const songElements = $$('.song');
+        songElements.forEach((songElement, index) => {
+            songElement.classList.toggle(
+                'active',
+                index === this.currentSongIndex
+            );
+        });
+        this._scrollToActiveSong();
     },
 
     // Call play/ pause
