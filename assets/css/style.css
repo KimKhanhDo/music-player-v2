@@ -280,6 +280,7 @@ header h2 {
 
 .song .title {
     font-size: 18px;
+    line-height: 1.5;
     font-weight: 600;
     color: var(--text-color);
     max-width: 300px;
@@ -291,7 +292,7 @@ header h2 {
 .song .author {
     display: flex;
     align-items: center;
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: 13px;
     line-height: 1.4;
     font-weight: 500;
