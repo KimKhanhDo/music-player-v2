@@ -46,7 +46,7 @@ body {
     top: 0;
     width: 100%;
     max-width: 500px;
-    padding: 24px;
+    padding: 8px 24px 30px 24px;
     background-color: var(--secondary-color);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 2px 5px var(--shadow-color);
@@ -155,7 +155,7 @@ header h2 {
 }
 
 .control .btn-toggle-play:hover {
-    background: #f95382;
+    background: #fff;
     transform: scale(1.1);
     box-shadow: 0 8px 25px rgba(255, 90, 136, 0.3);
 }
@@ -215,7 +215,7 @@ header h2 {
 }
 
 .playlist {
-    margin-top: 476px;
+    margin-top: 466px;
     padding: 20px 12px;
     min-height: 500px;
     box-shadow: 0 2px 5px var(--shadow-color);
@@ -395,12 +395,14 @@ header h2 {
 
 .dashboard .search-btn {
     position: absolute;
-    top: -4px;
+    top: 12px;
     right: 4px;
-    background: var(--card-bg);
-    color: var(--text-color);
+
     padding: 10px;
     border-radius: 50%;
+
+    background: var(--card-bg);
+    color: var(--text-color);
     box-shadow: 0 4px 10px var(--shadow-color);
     cursor: pointer;
     transition: opacity 0.3s ease, transform 0.3s ease;
@@ -412,7 +414,8 @@ header h2 {
     transform: scale(0.8);
 }
 
-.dashboard .search-btn:hover {
+.dashboard .search-btn:hover,
+.drawer-menu:hover {
     color: var(--primary-color);
     background: rgba(255, 255, 255, 0.1);
     box-shadow: 0 6px 12px var(--shadow-color);
@@ -421,12 +424,24 @@ header h2 {
 
 .drawer-menu {
     position: absolute;
-    top: 24px;
+    top: 18px;
     left: 24px;
-    font-size: 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    font-size: 16px;
+    background: var(--card-bg);
     color: var(--text-color);
+    box-shadow: 0 4px 10px var(--shadow-color);
     cursor: pointer;
-    z-index: 11;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 2;
 }
 
 .sub-menu {
@@ -458,6 +473,40 @@ header h2 {
 .sub-menu .menu-item:hover {
     background: rgba(255, 255, 255, 0.15);
     color: var(--primary-color);
+}
+
+.empty-favorites {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 400px;
+    padding: 20px;
+    text-align: center;
+    color: var(--text-subtle);
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 2px 5px var(--shadow-color);
+}
+
+.empty-favorites .fas {
+    font-size: 48px;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.empty-favorites h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.empty-favorites p {
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 300px;
 }
 
 body.light-mode {
@@ -527,4 +576,18 @@ body.light-mode .song .option .fa-heart.active {
 body.light-mode header h2 {
     color: #ffffff;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Empty message */
+body.light-mode .empty-favorites {
+    background: rgba(254, 247, 247, 0.8);
+    color: var(--text-subtle);
+}
+
+body.light-mode .empty-favorites h3 {
+    color: var(--text-color);
+}
+
+body.light-mode .empty-favorites .fas {
+    color: var(--primary-color);
 }
